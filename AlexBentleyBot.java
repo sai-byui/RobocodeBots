@@ -13,8 +13,38 @@ public class AlexBentleyBot extends robocode.AdvancedRobot
 	int tY = 0;
 	static double totalBulletsTracked = 0;
 	static double bulletsHit = 0;
-	double distanceMod = 774;
-	double firePowerMod = 580;
+	double distanceMod = 775; //774;
+	double firePowerMod = 666; //580;
+	double turnMod = 164; //90;
+	double aheadMod = 136; //90;
+
+	private boolean aboutToHitNorth() {
+		boolean headingWithinRange = getHeading() < 45 || getHeading() > 315;
+		boolean positionInDangerZone = getY() > getBattleFieldHeight() - 200;
+
+		return headingWithinRange && positionInDangerZone;
+	}
+
+	private boolean aboutToHitSouth() {
+		boolean headingWithinRange = getHeading() < 225 && getHeading() > 135;
+		boolean positionInDangerZone = getY() < 200;
+
+		return headingWithinRange && positionInDangerZone;
+	}
+
+	private boolean aboutToHitWest() {
+		boolean headingWithinRange = getHeading() < 315 && getHeading() > 225;
+		boolean positionInDangerZone = getX() < 200;
+
+		return headingWithinRange && positionInDangerZone;
+	}
+
+	private boolean aboutToHitEast() {
+		boolean headingWithinRange = getHeading() < 135 && getHeading() > 45;
+		boolean positionInDangerZone = getX() > getBattleFieldWidth() - 200;
+
+		return headingWithinRange && positionInDangerZone;
+	}
 	
 
 	/**
@@ -30,7 +60,12 @@ public class AlexBentleyBot extends robocode.AdvancedRobot
 		setColors(Color.red,Color.blue,Color.green); // body,gun,radar
 
 		while(true) {
+			setTurnRight(turnMod);
+			if (!aboutToHitEast() && !aboutToHitWest() && !aboutToHitNorth() && !aboutToHitSouth()) {
+				setAhead(aheadMod);
+			}
 			turnRadarRight(90);
+			
 		}
 	}
 	
@@ -68,7 +103,7 @@ public class AlexBentleyBot extends robocode.AdvancedRobot
 		double botY = myY + e.getDistance() * Math.cos(e.getBearingRadians() + Math.toRadians(getHeading()));
 		double[] botPos = {botX, botY};
 		double firePower = Math.min(firePowerMod / e.getDistance(), 3.0);
-		for (int i = 0; i < 10; i++)
+		for (int i = 0; i < 50; i++)
 		{
 			double vel = 0;
 			if (i == 0)
@@ -76,9 +111,12 @@ public class AlexBentleyBot extends robocode.AdvancedRobot
 				vel = e.getVelocity();
 			}
 			botPos = adjustTargetPositionForDistanceAndVelocity(20 - 3 * firePower, myX, myY, botPos[0], botPos[1], vel, e.getHeadingRadians());
+			firePower = Math.min(firePowerMod / (Math.sqrt(Math.pow(myX - botPos[0], 2) + Math.pow(myY - botPos[1], 2))), 3.0);
 		}
+
 		tX = (int) botPos[0];
 		tY = (int) botPos[1];
+
 		
 		double adjustedX = botPos[0] - myX;
 		double adjustedY = botPos[1] - myY;
@@ -101,8 +139,8 @@ public class AlexBentleyBot extends robocode.AdvancedRobot
 		double t3 = Math.toDegrees(Math.atan(adjustedX / adjustedY));
 		double t4 = Math.toDegrees(Math.atan(adjustedY / adjustedX));
 
-		//out.println("T1: " + t1); //Keeps going to NaN ???
-		//out.println("T2: " + t2); //Keeps going to NaN ???
+		//out.println("T1: " + t1);
+		//out.println("T2: " + t2);
 		//out.println("T3: " + t3);
 		//out.println("T4: " + t4);
 
@@ -122,6 +160,8 @@ public class AlexBentleyBot extends robocode.AdvancedRobot
 
 		//out.println("Angle_to_move_turret: " + angle_to_move_turret);
 
+		angle_to_move_turret -= 1;
+
 		if (angle_to_move_turret > 0) {
 			turnGunRight(angle_to_move_turret);
 		}
@@ -131,14 +171,6 @@ public class AlexBentleyBot extends robocode.AdvancedRobot
 		if (angle_to_move_turret < distanceMod/distance && botPos[0] > 0 && botPos[1] > 0 && botPos[0] < getBattleFieldWidth() && botPos[1] < getBattleFieldHeight()) {
 			fire(firePower);
 		}
-	}
-
-	/**
-	 * onHitByBullet: What to do when you're hit by a bullet
-	 */
-	public void onHitByBullet(HitByBulletEvent e) {
-		// Replace the next line with any behavior you would like
-		back(10);
 	}
 
 	public void onBattleEnded(BattleEndedEvent e) {
@@ -151,12 +183,4 @@ public class AlexBentleyBot extends robocode.AdvancedRobot
 		g.setColor(java.awt.Color.GREEN);
 		g.fillOval(tX, tY, 10, 10);
 	}
-	
-	/**
-	 * onHitWall: What to do when you hit a wall
-	 */
-	public void onHitWall(HitWallEvent e) {
-		// Replace the next line with any behavior you would like
-		back(20);
-	}	
 }
